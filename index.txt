@@ -60,3 +60,121 @@ kubectl scale deployment my-httpd-deployment --replicas=5
   kubectl get pods
 kubectl delete pod (id)
 kubectl delete service my-httpd-deployment
+
+
+//Experiment 9 :Calculator Application
+mkdir simple-calculator
+cd simple-calculator
+mvn archetype:generate -DgroupId=com.calculator -DartifactId=simple-calculator -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+nano src/main/java/com/calculator/App.java
+(package com.calculator;
+
+import java.util.Scanner;
+
+public class App {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        double num1, num2, result;
+        char operator;
+
+        // Input from user
+        System.out.print("Enter first number: ");
+        num1 = scanner.nextDouble();
+
+        System.out.print("Enter an operator (+, -, *, /): ");
+        operator = scanner.next().charAt(0);
+
+        System.out.print("Enter second number: ");
+        num2 = scanner.nextDouble();
+
+        // Perform calculation based on operator
+        switch (operator) {
+            case '+':
+                result = num1 + num2;
+                System.out.println("Result: " + result);
+                break;
+            case '-':
+                result = num1 - num2;
+                System.out.println("Result: " + result);
+                break;
+            case '*':
+                result = num1 * num2;
+                System.out.println("Result: " + result);
+                break;
+            case '/':
+                if (num2 != 0) {
+                    result = num1 / num2;
+                    System.out.println("Result: " + result);
+                } else {
+                    System.out.println("Error! Division by zero.");
+                }
+                break;
+            default:
+                System.out.println("Invalid operator.");
+                break;
+        }
+
+        scanner.close();
+    }
+}
+)
+nano pom.xml
+(<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.calculator</groupId>
+    <artifactId>simple-calculator</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
+)
+mvn compile
+mvn package
+java -jar target/simple-calculator-1.0-SNAPSHOT.jar
+git init
+git add .
+git commit -m "Initial commit of calculator application"
+git remote add origin https://github.com/yourusername/simple-calculator.git
+git push -u origin master
+nano Jenkinsfile
+(pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/yourusername/simple-calculator.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'java -jar target/simple-calculator-1.0-SNAPSHOT.jar'
+            }
+        }
+    }
+}
+)
+nano Dockerfile
+(FROM openjdk:11-jre-slim
+COPY target/simple-calculator-1.0-SNAPSHOT.jar /app.jar
+ENTRYPOINT ["java", "-jar", "/app.jar"]
+)
+docker build -t simple-calculator .
+docker run -p 8080:8080 simple-calculator
